@@ -531,8 +531,11 @@ template <typename mj_scalar_t, typename mj_lno_t, typename mj_gno_t,
           typename mj_part_t>
 class AlgMJ
 {
+public:
+    typedef Zoltan2::default_coord_t mj_double_t;  // type for cuts and other internal coord info
+
 private:
-    typedef coordinateModelPartBox<mj_scalar_t, mj_part_t> mj_partBox_t;
+    typedef coordinateModelPartBox<mj_double_t, mj_part_t> mj_partBox_t;
     typedef std::vector<mj_partBox_t> mj_partBoxVector_t;
 
     RCP<const Environment> mj_env; //the environment object
@@ -552,7 +555,7 @@ private:
     mj_scalar_t **mj_coordinates; //two dimension coordinate array
     mj_scalar_t **mj_weights; //two dimension weight array
     bool *mj_uniform_parts; //if the target parts are uniform
-    mj_scalar_t **mj_part_sizes; //target part weight sizes.
+    mj_double_t **mj_part_sizes; //target part weight sizes.
     bool *mj_uniform_weights; //if the coordinates have uniform weights.
 
     ArrayView<const mj_gno_t> mj_gnos; //global ids of the coordinates, comes from the input
@@ -580,7 +583,7 @@ private:
     int check_migrate_avoid_migration_option; //whether to migrate=1, avoid migrate=2, or leave decision to MJ=0
     int migration_type; // when doing the migration, 0 will aim for perfect load-imbalance, 
     			//1 - will aim for minimized number of messages with possibly bad load-imbalance
-    double minimum_migration_imbalance; //when MJ decides whether to migrate, the minimum imbalance for migration.
+    mj_double_t minimum_migration_imbalance; //when MJ decides whether to migrate, the minimum imbalance for migration.
     int num_threads; //num threads
 
     mj_part_t total_num_cut ; //how many cuts will be totally
@@ -602,7 +605,7 @@ private:
     mj_scalar_t maxScalar_t; //max possible scalar
     mj_scalar_t minScalar_t; //min scalar
 
-    mj_scalar_t *all_cut_coordinates;
+    mj_double_t *all_cut_coordinates;
     mj_scalar_t *max_min_coords;
     mj_scalar_t *process_cut_line_weight_to_put_left; //how much weight should a MPI put left side of the each cutline
     mj_scalar_t **thread_cut_line_weight_to_put_left; //how much weight percentage should each thread in MPI put left side of the each outline
@@ -616,8 +619,8 @@ private:
     //cumulative part weight array.
     mj_scalar_t *target_part_weights;
 
-    mj_scalar_t *cut_upper_bound_coordinates ;  //upper bound coordinate of a cut line
-    mj_scalar_t *cut_lower_bound_coordinates ;  //lower bound coordinate of a cut line
+    mj_double_t *cut_upper_bound_coordinates ;  //upper bound coordinate of a cut line
+    mj_double_t *cut_lower_bound_coordinates ;  //lower bound coordinate of a cut line
     mj_scalar_t *cut_lower_bound_weights ;  //lower bound weight of a cut line
     mj_scalar_t *cut_upper_bound_weights ;  //upper bound weight of a cut line
 
@@ -774,7 +777,7 @@ private:
         mj_scalar_t max_coord,
         mj_part_t num_cuts/*p-1*/ ,
         mj_scalar_t global_weight,
-        mj_scalar_t *initial_cut_coords /*p - 1 sized, coordinate of each cut line*/,
+        mj_double_t *initial_cut_coords /*p - 1 sized, coordinate of each cut line*/,
         mj_scalar_t *target_part_weights /*cumulative weights, at left side of each cut line. p-1 sized*/,
 
         std::vector <mj_part_t> *future_num_part_in_parts, //the vecto
@@ -817,10 +820,10 @@ private:
      */
     void mj_1D_part(
         mj_scalar_t *mj_current_dim_coords,
-        mj_scalar_t imbalanceTolerance,
+        double imbalanceTolerance,
         mj_part_t current_work_part,
         mj_part_t current_concurrent_num_parts,
-        mj_scalar_t *current_cut_coordinates,
+        mj_double_t *current_cut_coordinates,
         mj_part_t total_incomplete_cut_count,
         std::vector <mj_part_t> &num_partitioning_in_current_dim);
 
@@ -851,7 +854,7 @@ private:
         mj_lno_t coordinate_begin_index,
         mj_lno_t coordinate_end_index,
         mj_scalar_t *mj_current_dim_coords,
-        mj_scalar_t *temp_current_cut_coords,
+        mj_double_t *temp_current_cut_coords,
         bool *current_cut_status,
         double *my_current_part_weights,
         mj_scalar_t *my_current_left_closest,
@@ -905,19 +908,19 @@ private:
         const mj_scalar_t &max_coordinate,
         const mj_scalar_t &min_coordinate,
         const mj_scalar_t &global_total_weight,
-        const mj_scalar_t &used_imbalance_tolerance,
+        const double &used_imbalance_tolerance,
         mj_scalar_t * current_global_part_weights,
         const mj_scalar_t * current_local_part_weights,
         const mj_scalar_t *current_part_target_weights,
         bool *current_cut_line_determined,
-        mj_scalar_t *current_cut_coordinates,
-        mj_scalar_t *current_cut_upper_bounds,
-        mj_scalar_t *current_cut_lower_bounds,
-        mj_scalar_t *current_global_left_closest_points,
-        mj_scalar_t *current_global_right_closest_points,
+        mj_double_t *current_cut_coordinates,
+        mj_double_t *current_cut_upper_bounds,
+        mj_double_t *current_cut_lower_bounds,
+        mj_double_t *current_global_left_closest_points,
+        mj_double_t *current_global_right_closest_points,
         mj_scalar_t * current_cut_lower_bound_weights,
         mj_scalar_t * current_cut_upper_weights,
-        mj_scalar_t *new_current_cut_coordinates,
+        mj_double_t *new_current_cut_coordinates,
         mj_scalar_t *current_part_cut_line_weight_to_put_left,
         mj_part_t *rectilinear_cut_count,
         mj_part_t &my_num_incomplete_cut);
@@ -932,12 +935,12 @@ private:
      * \param expected_weight is the expected weight that should be placed on the left of the cut line.
      */
     void mj_calculate_new_cut_position (
-        mj_scalar_t cut_upper_bound,
-        mj_scalar_t cut_lower_bound,
+        mj_double_t cut_upper_bound,
+        mj_double_t cut_lower_bound,
         mj_scalar_t cut_upper_weight,
         mj_scalar_t cut_lower_weight,
         mj_scalar_t expected_weight,
-        mj_scalar_t &new_cut_position);
+        mj_double_t &new_cut_position);
 
     /*! \brief Function that determines the permutation indices of the coordinates.
      * \param num_parts is the number of parts.
@@ -952,7 +955,7 @@ private:
     void mj_create_new_partitions(
         mj_part_t num_parts,
         mj_scalar_t *mj_current_dim_coords,
-        mj_scalar_t *current_concurrent_cut_coordinate,
+        mj_double_t *current_concurrent_cut_coordinate,
         mj_lno_t coordinate_begin,
         mj_lno_t coordinate_end,
         mj_scalar_t *used_local_cut_line_weight_to_left,
@@ -1214,7 +1217,7 @@ private:
     void create_consistent_chunks(
         mj_part_t num_parts,
         mj_scalar_t *mj_current_dim_coords,
-        mj_scalar_t *current_concurrent_cut_coordinate,
+        mj_double_t *current_concurrent_cut_coordinate,
         mj_lno_t coordinate_begin,
         mj_lno_t coordinate_end,
         mj_scalar_t *used_local_cut_line_weight_to_left,
@@ -1294,7 +1297,7 @@ public:
                 bool *mj_uniform_weights,
                 mj_scalar_t **mj_weights,
                 bool *mj_uniform_parts,
-                mj_scalar_t **mj_part_sizes,
+                mj_double_t **mj_part_sizes,
 
                 mj_part_t *&result_assigned_part_ids,
                 mj_gno_t *&result_mj_gnos
@@ -1455,7 +1458,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::sequential_task_partitio
     this->mj_uniform_parts = tmp_mj_uniform_parts;
     this->mj_uniform_parts[0] = true;
 
-    mj_scalar_t **tmp_mj_part_sizes = new mj_scalar_t * [1];
+    mj_double_t **tmp_mj_part_sizes = new mj_double_t * [1];
     this->mj_part_sizes = tmp_mj_part_sizes;
     this->mj_part_sizes[0] = NULL;
 
@@ -1471,7 +1474,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::sequential_task_partitio
 
     mj_part_t current_num_parts = 1;
 
-    mj_scalar_t *current_cut_coordinates =  this->all_cut_coordinates;
+    mj_double_t *current_cut_coordinates =  this->all_cut_coordinates;
 
     mj_part_t future_num_parts = this->total_num_part;
 
@@ -1682,7 +1685,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::sequential_task_partitio
 
                     mj_part_t partition_count = num_partitioning_in_current_dim[concurrent_current_part_index];
 
-                    mj_scalar_t *usedCutCoordinate = current_cut_coordinates + concurrent_part_cut_shift;
+                    mj_double_t *usedCutCoordinate = current_cut_coordinates + concurrent_part_cut_shift;
                     mj_scalar_t *current_target_part_weights = this->target_part_weights +
                                                                      concurrent_part_part_shift;
                     //shift the usedCutCoordinate array as noCuts.
@@ -1783,7 +1786,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::sequential_task_partitio
                     mj_lno_t coordinate_end = this->part_xadj[current_concurrent_work_part];
                     mj_lno_t coordinate_begin = current_concurrent_work_part==0 ? 0: this->part_xadj[current_concurrent_work_part
                                                              -1];
-                    mj_scalar_t *current_concurrent_cut_coordinate = current_cut_coordinates + cut_shift;
+                    mj_double_t *current_concurrent_cut_coordinate = current_cut_coordinates + cut_shift;
                     mj_scalar_t *used_local_cut_line_weight_to_left = this->process_cut_line_weight_to_put_left +
                                                          cut_shift;
 
@@ -1887,7 +1890,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::sequential_task_partitio
     freeArray<bool>(tmp_mj_uniform_weights);
     freeArray<bool>(tmp_mj_uniform_parts);
     freeArray<mj_scalar_t *>(tmp_mj_weights);
-    freeArray<mj_scalar_t *>(tmp_mj_part_sizes);
+    freeArray<mj_double_t *>(tmp_mj_part_sizes);
 
     this->free_work_memory();
 
@@ -2325,7 +2328,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::allocate_set_work_memory
         //this->all_cut_coordinates = allocMemory< mj_scalar_t>(this->total_num_cut);
 
 
-        this->all_cut_coordinates  = allocMemory< mj_scalar_t>(this->max_num_cut_along_dim * this->max_concurrent_part_calculation);
+        this->all_cut_coordinates  = allocMemory< mj_double_t>(this->max_num_cut_along_dim * this->max_concurrent_part_calculation);
 
         this->max_min_coords =  allocMemory< mj_scalar_t>(this->num_threads * 2);
 
@@ -2356,8 +2359,8 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::allocate_set_work_memory
                                         this->max_num_part_along_dim * this->max_concurrent_part_calculation);
         // the weight from left to write.
 
-    this->cut_upper_bound_coordinates = allocMemory<mj_scalar_t>(this->max_num_cut_along_dim * this->max_concurrent_part_calculation);  //upper bound coordinate of a cut line
-    this->cut_lower_bound_coordinates = allocMemory<mj_scalar_t>(this->max_num_cut_along_dim* this->max_concurrent_part_calculation);  //lower bound coordinate of a cut line
+    this->cut_upper_bound_coordinates = allocMemory<mj_double_t>(this->max_num_cut_along_dim * this->max_concurrent_part_calculation);  //upper bound coordinate of a cut line
+    this->cut_lower_bound_coordinates = allocMemory<mj_double_t>(this->max_num_cut_along_dim* this->max_concurrent_part_calculation);  //lower bound coordinate of a cut line
     this->cut_lower_bound_weights = allocMemory<mj_scalar_t>(this->max_num_cut_along_dim* this->max_concurrent_part_calculation);  //lower bound weight of a cut line
     this->cut_upper_bound_weights = allocMemory<mj_scalar_t>(this->max_num_cut_along_dim* this->max_concurrent_part_calculation);  //upper bound weight of a cut line
 
@@ -2449,17 +2452,17 @@ template <typename mj_scalar_t, typename mj_lno_t, typename mj_gno_t,
 void AlgMJ<mj_scalar_t,mj_lno_t,mj_gno_t,mj_part_t>::compute_global_box()
 {
     //local min coords
-    mj_scalar_t *mins = allocMemory<mj_scalar_t>(this->coord_dim);
+    mj_double_t *mins = allocMemory<mj_double_t>(this->coord_dim);
     //global min coords
-    mj_scalar_t *gmins = allocMemory<mj_scalar_t>(this->coord_dim);
+    mj_double_t *gmins = allocMemory<mj_double_t>(this->coord_dim);
     //local max coords
-    mj_scalar_t *maxs = allocMemory<mj_scalar_t>(this->coord_dim);
+    mj_double_t *maxs = allocMemory<mj_double_t>(this->coord_dim);
     //global max coords
-    mj_scalar_t *gmaxs = allocMemory<mj_scalar_t>(this->coord_dim);
+    mj_double_t *gmaxs = allocMemory<mj_double_t>(this->coord_dim);
 
     for (int i = 0; i < this->coord_dim; ++i){
-        mj_scalar_t localMin = std::numeric_limits<mj_scalar_t>::max();
-        mj_scalar_t localMax = -localMin;
+        mj_double_t localMin = std::numeric_limits<mj_double_t>::max();
+        mj_double_t localMax = -localMin;
         if (localMax > 0) localMax = 0;
 
 
@@ -2477,12 +2480,12 @@ void AlgMJ<mj_scalar_t,mj_lno_t,mj_gno_t,mj_part_t>::compute_global_box()
         maxs[i] = localMax;
 
     }
-    reduceAll<int, mj_scalar_t>(*this->comm, Teuchos::REDUCE_MIN,
+    reduceAll<int, mj_double_t>(*this->comm, Teuchos::REDUCE_MIN,
             this->coord_dim, mins, gmins
     );
 
 
-    reduceAll<int, mj_scalar_t>(*this->comm, Teuchos::REDUCE_MAX,
+    reduceAll<int, mj_double_t>(*this->comm, Teuchos::REDUCE_MAX,
             this->coord_dim, maxs, gmaxs
     );
 
@@ -2491,10 +2494,10 @@ void AlgMJ<mj_scalar_t,mj_lno_t,mj_gno_t,mj_part_t>::compute_global_box()
     //create single box with all areas.
     global_box = rcp(new mj_partBox_t(0,this->coord_dim,gmins,gmaxs));
     //coordinateModelPartBox <mj_scalar_t, mj_part_t> tmpBox (0, coordDim);
-    freeArray<mj_scalar_t>(mins);
-    freeArray<mj_scalar_t>(gmins);
-    freeArray<mj_scalar_t>(maxs);
-    freeArray<mj_scalar_t>(gmaxs);
+    freeArray<mj_double_t>(mins);
+    freeArray<mj_double_t>(gmins);
+    freeArray<mj_double_t>(maxs);
+    freeArray<mj_double_t>(gmaxs);
 }
 
 /* \brief for part communication we keep track of the box boundaries.
@@ -2769,7 +2772,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::set_initial_coordinate_p
     mj_part_t *mj_part_ids,
     mj_part_t &partition_count
 ){
-    mj_scalar_t coordinate_range = max_coordinate - min_coordinate;
+    mj_double_t coordinate_range = max_coordinate - min_coordinate;
 
     //if there is single point, or if all points are along a line.
     //set initial part to 0 for all.
@@ -2785,7 +2788,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::set_initial_coordinate_p
 
         //otherwise estimate an initial part for each coordinate.
         //assuming uniform distribution of points.
-        mj_scalar_t slice = coordinate_range / partition_count;
+        mj_double_t slice = coordinate_range / partition_count;
 
 #ifdef HAVE_ZOLTAN2_OMP
 #pragma omp parallel for
@@ -2814,17 +2817,17 @@ template <typename mj_scalar_t, typename mj_lno_t, typename mj_gno_t,
           typename mj_part_t>
 void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part(
     mj_scalar_t *mj_current_dim_coords,
-    mj_scalar_t used_imbalance_tolerance,
+    double used_imbalance_tolerance,
     mj_part_t current_work_part,
     mj_part_t current_concurrent_num_parts,
-    mj_scalar_t *current_cut_coordinates,
+    mj_double_t *current_cut_coordinates,
     mj_part_t total_incomplete_cut_count,
     std::vector <mj_part_t> &num_partitioning_in_current_dim
 ){
 
 
     mj_part_t rectilinear_cut_count = 0;
-    mj_scalar_t *temp_cut_coords = current_cut_coordinates;
+    mj_double_t *temp_cut_coords = current_cut_coordinates;
 
     Teuchos::MultiJaggedCombinedReductionOp<mj_part_t, mj_scalar_t>
                  *reductionOp = NULL;
@@ -2901,7 +2904,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part(
                     mj_part_t conccurent_current_part = current_work_part + kk;
                     mj_lno_t coordinate_begin_index = conccurent_current_part ==0 ? 0: this->part_xadj[conccurent_current_part -1];
                     mj_lno_t coordinate_end_index = this->part_xadj[conccurent_current_part];
-                    mj_scalar_t *temp_current_cut_coords = temp_cut_coords + concurrent_cut_shifts;
+                    mj_double_t *temp_current_cut_coords = temp_cut_coords + concurrent_cut_shifts;
 
                     mj_scalar_t min_coord = global_min_max_coord_total_weight[kk];
                     mj_scalar_t max_coord = global_min_max_coord_total_weight[kk + current_concurrent_num_parts];
@@ -2974,8 +2977,8 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part(
 
                 mj_scalar_t *current_local_part_weights = this->total_part_weight_left_right_closests  + tlr_shift ;
                 mj_scalar_t *current_global_tlr = this->global_total_part_weight_left_right_closests + tlr_shift;
-                mj_scalar_t *current_global_left_closest_points = current_global_tlr + num_total_part; //left closest points
-                mj_scalar_t *current_global_right_closest_points = current_global_tlr + num_total_part + num_cuts; //right closest points
+                mj_double_t *current_global_left_closest_points = current_global_tlr + num_total_part; //left closest points
+                mj_double_t *current_global_right_closest_points = current_global_tlr + num_total_part + num_cuts; //right closest points
                 mj_scalar_t *current_global_part_weights = current_global_tlr;
                 bool *current_cut_line_determined = this->is_cut_line_determined + cut_shift;
 
@@ -2987,8 +2990,8 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part(
                 mj_scalar_t global_total_weight = global_min_max_coord_total_weight[kk + current_concurrent_num_parts * 2];
                 mj_scalar_t *current_cut_lower_bound_weights = this->cut_lower_bound_weights + cut_shift;
                 mj_scalar_t *current_cut_upper_weights = this->cut_upper_bound_weights + cut_shift;
-                mj_scalar_t *current_cut_upper_bounds = this->cut_upper_bound_coordinates + cut_shift;
-                mj_scalar_t *current_cut_lower_bounds = this->cut_lower_bound_coordinates + cut_shift;
+                mj_double_t *current_cut_upper_bounds = this->cut_upper_bound_coordinates + cut_shift;
+                mj_double_t *current_cut_lower_bounds = this->cut_lower_bound_coordinates + cut_shift;
 
                 mj_part_t initial_incomplete_cut_count = this->my_incomplete_cut_count[kk];
 
@@ -3034,7 +3037,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part(
 #endif
             {
                 //swap the cut coordinates for next iteration.
-                mj_scalar_t *t = temp_cut_coords;
+                mj_double_t *t = temp_cut_coords;
                 temp_cut_coords = this->cut_coordinates_work_array;
                 this->cut_coordinates_work_array = t;
             }
@@ -3106,7 +3109,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part_get_thread_pa
     mj_lno_t coordinate_begin_index,
     mj_lno_t coordinate_end_index,
     mj_scalar_t *mj_current_dim_coords,
-    mj_scalar_t *temp_current_cut_coords,
+    mj_double_t *temp_current_cut_coords,
     bool *current_cut_status,
     double *my_current_part_weights,
     mj_scalar_t *my_current_left_closest,
@@ -3159,9 +3162,9 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part_get_thread_pa
                         last_compared_part = -1;
                         is_on_left_of_cut = false;
                         is_on_right_of_cut = false;
-                        mj_scalar_t cut = temp_current_cut_coords[j];
-                        mj_scalar_t distance_to_cut = coord - cut;
-                        mj_scalar_t abs_distance_to_cut = ZOLTAN2_ABS(distance_to_cut);
+                        mj_double_t cut = temp_current_cut_coords[j];
+                        mj_double_t distance_to_cut = coord - cut;
+                        mj_double_t abs_distance_to_cut = ZOLTAN2_ABS(distance_to_cut);
 
                         //if it is on the line.
                         if(abs_distance_to_cut < this->sEpsilon){
@@ -3227,7 +3230,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part_get_thread_pa
                                         if(j > 0){
                                                 //check distance to the cut on the left the current cut compared.
                                                 //if point is on the right, then we find the part of the point.
-                                                mj_scalar_t distance_to_next_cut = coord - temp_current_cut_coords[j - 1];
+                                                mj_double_t distance_to_next_cut = coord - temp_current_cut_coords[j - 1];
                                                 if(distance_to_next_cut > this->sEpsilon){
                                                         _break = true;
                                                 }
@@ -3246,7 +3249,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_1D_part_get_thread_pa
                                         if(j < num_cuts - 1){
                                                 //check distance to the cut on the left the current cut compared.
                                                 //if point is on the right, then we find the part of the point.
-                                                mj_scalar_t distance_to_next_cut = coord - temp_current_cut_coords[j + 1];
+                                                mj_double_t distance_to_next_cut = coord - temp_current_cut_coords[j + 1];
                                                 if(distance_to_next_cut < minus_EPSILON){
                          _break = true;
                      }
@@ -3435,12 +3438,12 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_accumulate_thread_res
 template <typename mj_scalar_t, typename mj_lno_t, typename mj_gno_t,
           typename mj_part_t>
 void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_calculate_new_cut_position (
-        mj_scalar_t cut_upper_bound,
-    mj_scalar_t cut_lower_bound,
+    mj_double_t cut_upper_bound,
+    mj_double_t cut_lower_bound,
     mj_scalar_t cut_upper_weight,
     mj_scalar_t cut_lower_weight,
     mj_scalar_t expected_weight,
-    mj_scalar_t &new_cut_position){
+    mj_double_t &new_cut_position){
 
     if(ZOLTAN2_ABS(cut_upper_bound - cut_lower_bound) < this->sEpsilon){
         new_cut_position = cut_upper_bound; //or lower bound does not matter.
@@ -3451,11 +3454,11 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_calculate_new_cut_pos
         new_cut_position = cut_lower_bound;
     }
 
-    mj_scalar_t coordinate_range = (cut_upper_bound - cut_lower_bound);
-    mj_scalar_t weight_range = (cut_upper_weight - cut_lower_weight);
-    mj_scalar_t my_weight_diff = (expected_weight - cut_lower_weight);
+    mj_double_t coordinate_range = (cut_upper_bound - cut_lower_bound);
+    mj_double_t weight_range = (cut_upper_weight - cut_lower_weight);
+    mj_double_t my_weight_diff = (expected_weight - cut_lower_weight);
 
-    mj_scalar_t required_shift = (my_weight_diff / weight_range);
+    mj_double_t required_shift = (my_weight_diff / weight_range);
     int scale_constant = 20;
     int shiftint= int (required_shift * scale_constant);
     if (shiftint == 0) shiftint = 1;
@@ -3479,7 +3482,7 @@ template <typename mj_scalar_t, typename mj_lno_t, typename mj_gno_t,
 void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_create_new_partitions(
     mj_part_t num_parts,
     mj_scalar_t *mj_current_dim_coords,
-    mj_scalar_t *current_concurrent_cut_coordinate,
+    mj_double_t *current_concurrent_cut_coordinate,
     mj_lno_t coordinate_begin,
     mj_lno_t coordinate_end,
     mj_scalar_t *used_local_cut_line_weight_to_left,
@@ -3713,19 +3716,19 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_get_new_cut_coordinat
                 const mj_scalar_t &max_coordinate,
                 const mj_scalar_t &min_coordinate,
                 const mj_scalar_t &global_total_weight,
-                const mj_scalar_t &used_imbalance_tolerance,
+                const double &used_imbalance_tolerance,
                 mj_scalar_t * current_global_part_weights,
                 const mj_scalar_t * current_local_part_weights,
                 const mj_scalar_t *current_part_target_weights,
                 bool *current_cut_line_determined,
-                mj_scalar_t *current_cut_coordinates,
-                mj_scalar_t *current_cut_upper_bounds,
-                mj_scalar_t *current_cut_lower_bounds,
-                mj_scalar_t *current_global_left_closest_points,
-                mj_scalar_t *current_global_right_closest_points,
+                mj_double_t *current_cut_coordinates,
+                mj_double_t *current_cut_upper_bounds,
+                mj_double_t *current_cut_lower_bounds,
+                mj_double_t *current_global_left_closest_points,
+                mj_double_t *current_global_right_closest_points,
                 mj_scalar_t * current_cut_lower_bound_weights,
                 mj_scalar_t * current_cut_upper_weights,
-                mj_scalar_t *new_current_cut_coordinates,
+                mj_double_t *new_current_cut_coordinates,
                 mj_scalar_t *current_part_cut_line_weight_to_put_left,
                 mj_part_t *rectilinear_cut_count,
                 mj_part_t &my_num_incomplete_cut){
@@ -3890,7 +3893,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_get_new_cut_coordinat
                         }
 
 
-                        mj_scalar_t new_cut_position = 0;
+                        mj_double_t new_cut_position = 0;
                         this->mj_calculate_new_cut_position(
                                         current_cut_upper_bounds[i],
                                         current_cut_lower_bounds[i],
@@ -3966,7 +3969,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_get_new_cut_coordinat
                                         current_cut_upper_weights[i] = p_weight;
                                 }
                         }
-                        mj_scalar_t new_cut_position = 0;
+                        mj_double_t new_cut_position = 0;
                         this->mj_calculate_new_cut_position(
                                         current_cut_upper_bounds[i],
                                         current_cut_lower_bounds[i],
@@ -4162,7 +4165,7 @@ bool AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::mj_check_to_migrate(
 
         //if migration is to be checked and the imbalance is too high
     if (this->check_migrate_avoid_migration_option == 0){
-        double global_imbalance = 0;
+        mj_double_t global_imbalance = 0.;
         //global shift to reach the sum of coordiante count in each part.
         size_t global_shift = num_procs * num_parts;
 
@@ -5363,7 +5366,7 @@ template <typename mj_scalar_t, typename mj_lno_t, typename mj_gno_t,
 void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::create_consistent_chunks(
     mj_part_t num_parts,
     mj_scalar_t *mj_current_dim_coords,
-    mj_scalar_t *current_concurrent_cut_coordinate,
+    mj_double_t *current_concurrent_cut_coordinate,
     mj_lno_t coordinate_begin,
     mj_lno_t coordinate_end,
     mj_scalar_t *used_local_cut_line_weight_to_left,
@@ -5867,7 +5870,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::free_work_memory(){
 
         freeArray<mj_lno_t>(this->new_coordinate_permutations);
 
-        freeArray<mj_scalar_t>(this->all_cut_coordinates);
+        freeArray<mj_double_t>(this->all_cut_coordinates);
 
         freeArray<mj_scalar_t> (this->process_local_min_max_coord_total_weight);
 
@@ -5877,9 +5880,9 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::free_work_memory(){
 
         freeArray<mj_scalar_t>(this->target_part_weights);
 
-        freeArray<mj_scalar_t>(this->cut_upper_bound_coordinates);
+        freeArray<mj_double_t>(this->cut_upper_bound_coordinates);
 
-        freeArray<mj_scalar_t>(this->cut_lower_bound_coordinates);
+        freeArray<mj_double_t>(this->cut_lower_bound_coordinates);
 
         freeArray<mj_scalar_t>(this->cut_lower_bound_weights);
         freeArray<mj_scalar_t>(this->cut_upper_bound_weights);
@@ -5914,7 +5917,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::set_partitioning_paramet
                 bool distribute_points_on_cut_lines_,
                 int max_concurrent_part_calculation_,
                 int check_migrate_avoid_migration_option_,
-                double minimum_migration_imbalance_,
+                mj_double_t minimum_migration_imbalance_,
 		int migration_type_ ){
         this->distribute_points_on_cut_lines = distribute_points_on_cut_lines_;
         this->max_concurrent_part_calculation = max_concurrent_part_calculation_;
@@ -5977,7 +5980,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::multi_jagged_part(
         bool *mj_uniform_weights_,
         mj_scalar_t **mj_weights_,
         bool *mj_uniform_parts_,
-        mj_scalar_t **mj_part_sizes_,
+        mj_double_t **mj_part_sizes_,
 
         mj_part_t *&result_assigned_part_ids_,
         mj_gno_t *&result_mj_gnos_
@@ -6058,7 +6061,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::multi_jagged_part(
 
     //initially there is a single partition
     mj_part_t current_num_parts = 1;
-    mj_scalar_t *current_cut_coordinates =  this->all_cut_coordinates;
+    mj_double_t *current_cut_coordinates =  this->all_cut_coordinates;
 
     this->mj_env->timerStart(MACRO_TIMERS, "MultiJagged - Problem_Partitioning");
 
@@ -6234,7 +6237,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::multi_jagged_part(
 
                     mj_part_t partition_count = num_partitioning_in_current_dim[concurrent_current_part_index];
 
-                    mj_scalar_t *usedCutCoordinate = current_cut_coordinates + concurrent_part_cut_shift;
+                    mj_double_t *usedCutCoordinate = current_cut_coordinates + concurrent_part_cut_shift;
                     mj_scalar_t *current_target_part_weights = this->target_part_weights +
                                                         concurrent_part_part_shift;
                     //shift the usedCutCoordinate array as noCuts.
@@ -6339,7 +6342,7 @@ void AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t>::multi_jagged_part(
                     mj_lno_t coordinate_end= this->part_xadj[current_concurrent_work_part];
                     mj_lno_t coordinate_begin = current_concurrent_work_part==0 ? 0: this->part_xadj[
                                                                 current_concurrent_work_part -1];
-                    mj_scalar_t *current_concurrent_cut_coordinate = current_cut_coordinates + cut_shift;
+                    mj_double_t *current_concurrent_cut_coordinate = current_cut_coordinates + cut_shift;
                     mj_scalar_t *used_local_cut_line_weight_to_left = this->process_cut_line_weight_to_put_left +
                                                             cut_shift;
 
@@ -6503,17 +6506,22 @@ class Zoltan2_AlgMJ : public Algorithm<Adapter>
 private:
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-
     typedef CoordinateModel<typename Adapter::base_adapter_t> coordinateModel_t;
     typedef typename Adapter::scalar_t mj_scalar_t;
     typedef typename Adapter::gno_t mj_gno_t;
     typedef typename Adapter::lno_t mj_lno_t;
     typedef typename Adapter::node_t mj_node_t;
     typedef typename Adapter::part_t mj_part_t;
-    typedef coordinateModelPartBox<mj_scalar_t, mj_part_t> mj_partBox_t;
+
+    typedef AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t> mj_partitioner_t;
+    // type for cuts and other internal coord info
+    typedef typename mj_partitioner_t::mj_double_t mj_double_t;  
+
+    typedef coordinateModelPartBox<mj_double_t, mj_part_t> mj_partBox_t;
     typedef std::vector<mj_partBox_t> mj_partBoxVector_t;
+
 #endif
-    AlgMJ<mj_scalar_t, mj_lno_t, mj_gno_t, mj_part_t> mj_partitioner;
+    mj_partitioner_t mj_partitioner;
 
     RCP<const Environment> mj_env; //the environment object
     RCP<const Comm<int> > mj_problemComm; //initial comm object
@@ -6535,14 +6543,14 @@ private:
     bool *mj_uniform_weights; //if the coordinates have uniform weights.
     mj_scalar_t **mj_weights; //two dimensional weight array
     bool *mj_uniform_parts; //if the target parts are uniform
-    mj_scalar_t **mj_part_sizes; //target part weight sizes.
+    mj_double_t **mj_part_sizes; //target part weight sizes.
 
     bool distribute_points_on_cut_lines; //if partitioning can distribute points on same coordiante to different parts.
     mj_part_t max_concurrent_part_calculation; // how many parts we can calculate concurrently.
     int check_migrate_avoid_migration_option; //whether to migrate=1, avoid migrate=2, or leave decision to MJ=0
     int migration_type; // when doing the migration, 0 will aim for perfect load-imbalance, 
  			//1 for minimized messages
-    double minimum_migration_imbalance; //when MJ decides whether to migrate, the minimum imbalance for migration.
+    mj_double_t minimum_migration_imbalance; //when MJ decides whether to migrate, the minimum imbalance for migration.
     bool mj_keep_part_boxes; //if the boxes need to be kept.
 
     int num_threads;
@@ -7064,7 +7072,7 @@ void Zoltan2_AlgMJ<Adapter>::free_work_memory(){
         freeArray<mj_scalar_t *>(this->mj_coordinates);
         freeArray<mj_scalar_t *>(this->mj_weights);
         freeArray<bool>(this->mj_uniform_parts);
-        freeArray<mj_scalar_t *>(this->mj_part_sizes);
+        freeArray<mj_double_t *>(this->mj_part_sizes);
         freeArray<bool>(this->mj_uniform_weights);
 
 }
@@ -7095,7 +7103,7 @@ void Zoltan2_AlgMJ<Adapter>::set_up_partitioning_data(
         this->mj_uniform_parts = allocMemory< bool >(criteria_dim);
         //if in a criteria dimension, uniform part is false this shows ratios of
         //the target part weights.
-        this->mj_part_sizes =  allocMemory<mj_scalar_t *>(criteria_dim);
+        this->mj_part_sizes =  allocMemory<mj_double_t *>(criteria_dim);
         //if the weights of coordinates are uniform in a criteria dimension.
         this->mj_uniform_weights = allocMemory< bool >(criteria_dim);
 
@@ -7194,7 +7202,7 @@ void Zoltan2_AlgMJ<Adapter>::set_input_parameters(const Teuchos::ParameterList &
 
         pe = pl.getEntryPtr("mj_minimum_migration_imbalance");
         if (pe){
-                double imb;
+                mj_double_t imb;
                 imb = pe->getValue(&imb);
                 this->minimum_migration_imbalance = imb - 1.0;
         }
@@ -7521,26 +7529,26 @@ AlgMJ<mj_scalar_t,mj_lno_t,mj_gno_t,mj_part_t>::compute_global_box_boundaries(
 {
   mj_part_t ntasks = this->num_global_parts;
   int dim = (*localPartBoxes)[0].getDim();
-  mj_scalar_t *localPartBoundaries = new mj_scalar_t[ntasks * 2 *dim];
+  mj_double_t *localPartBoundaries = new mj_double_t[ntasks * 2 *dim];
 
-  memset(localPartBoundaries, 0, sizeof(mj_scalar_t) * ntasks * 2 *dim);
+  memset(localPartBoundaries, 0, sizeof(mj_double_t) * ntasks * 2 *dim);
 
-  mj_scalar_t *globalPartBoundaries = new mj_scalar_t[ntasks * 2 *dim];
-  memset(globalPartBoundaries, 0, sizeof(mj_scalar_t) * ntasks * 2 *dim);
+  mj_double_t *globalPartBoundaries = new mj_double_t[ntasks * 2 *dim];
+  memset(globalPartBoundaries, 0, sizeof(mj_double_t) * ntasks * 2 *dim);
 
-  mj_scalar_t *localPartMins = localPartBoundaries;
-  mj_scalar_t *localPartMaxs = localPartBoundaries + ntasks * dim;
+  mj_double_t *localPartMins = localPartBoundaries;
+  mj_double_t *localPartMaxs = localPartBoundaries + ntasks * dim;
 
-  mj_scalar_t *globalPartMins = globalPartBoundaries;
-  mj_scalar_t *globalPartMaxs = globalPartBoundaries + ntasks * dim;
+  mj_double_t *globalPartMins = globalPartBoundaries;
+  mj_double_t *globalPartMaxs = globalPartBoundaries + ntasks * dim;
 
   mj_part_t boxCount = localPartBoxes->size();
   for (mj_part_t i = 0; i < boxCount; ++i){
     mj_part_t pId = (*localPartBoxes)[i].getpId();
       //std::cout << "me:" << comm->getRank() << " has:" << pId << std::endl;
 
-    mj_scalar_t *lmins = (*localPartBoxes)[i].getlmins();
-    mj_scalar_t *lmaxs = (*localPartBoxes)[i].getlmaxs();
+    mj_double_t *lmins = (*localPartBoxes)[i].getlmins();
+    mj_double_t *lmaxs = (*localPartBoxes)[i].getlmaxs();
 
     for (int j = 0; j < dim; ++j){
       localPartMins[dim * pId + j] = lmins[j];
@@ -7554,13 +7562,13 @@ AlgMJ<mj_scalar_t,mj_lno_t,mj_gno_t,mj_part_t>::compute_global_box_boundaries(
     }
   }
 
-  Teuchos::Zoltan2_BoxBoundaries<int, mj_scalar_t> reductionOp(ntasks * 2 *dim);
+  Teuchos::Zoltan2_BoxBoundaries<int, mj_double_t> reductionOp(ntasks * 2 *dim);
 
-  reduceAll<int, mj_scalar_t>(*mj_problemComm, reductionOp,
+  reduceAll<int, mj_double_t>(*mj_problemComm, reductionOp,
             ntasks * 2 *dim, localPartBoundaries, globalPartBoundaries);
   RCP<mj_partBoxVector_t> pB(new mj_partBoxVector_t(),true);
   for (mj_part_t i = 0; i < ntasks; ++i){
-    Zoltan2::coordinateModelPartBox <mj_scalar_t, mj_part_t> tpb(i, dim,
+    Zoltan2::coordinateModelPartBox <mj_double_t, mj_part_t> tpb(i, dim,
                                                globalPartMins + dim * i,
                                                globalPartMaxs + dim * i);
 

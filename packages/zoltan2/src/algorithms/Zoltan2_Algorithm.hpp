@@ -56,6 +56,7 @@ class Algorithm;
 }
 
 #include <Zoltan2_Standards.hpp>
+#include <Zoltan2_InputTraits.hpp>
 #include <Zoltan2_ColoringSolution.hpp>
 #include <Zoltan2_OrderingSolution.hpp>
 #include <Zoltan2_PartitioningSolution.hpp>
@@ -150,7 +151,7 @@ public:
   //          Not all partitioning algorithms will support
   //          this method.
   //
-  virtual std::vector<coordinateModelPartBox<scalar_t, part_t> > &
+  virtual std::vector<coordinateModelPartBox<Zoltan2::default_coord_t,part_t> >&
   getPartBoxesView() const
   {
     Z2_THROW_NOT_IMPLEMENTED

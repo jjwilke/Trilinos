@@ -84,6 +84,11 @@ typedef ::Tpetra::Details::DefaultTypes::scalar_type default_scalar_t;
 // Until Kokkos node types are supported, use default
 typedef ::Tpetra::Details::DefaultTypes::node_type default_node_t;
 
+// Default coordinate type
+// This type is separate from default_scalar_t, as users may use integers
+// as coordinates, but values such as cuts need floating point.
+typedef double default_coord_t;
+
 // Default part number type.
 typedef int default_part_t;  // Restrictions in MPI interface will make it
                              // somewhat difficult to change default_part_t to

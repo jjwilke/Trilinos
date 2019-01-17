@@ -66,15 +66,15 @@ namespace Zoltan2{
 /*! \brief coordinateModelPartBox Class,
  * represents the boundaries of the box which is a result of a geometric partitioning algorithm.
  */
-template <typename scalar_t,typename part_t>
+template <typename coord_t, typename part_t>
 class coordinateModelPartBox{
 
         part_t pID; //part Id
         int dim;    //dimension of the box
-        scalar_t *lmins;    //minimum boundaries of the box along all dimensions.
-        scalar_t *lmaxs;    //maximum boundaries of the box along all dimensions.
-        scalar_t maxScalar;
-        scalar_t _EPSILON;
+        coord_t *lmins;    //minimum boundaries of the box along all dimensions.
+        coord_t *lmaxs;    //maximum boundaries of the box along all dimensions.
+        coord_t maxScalar;
+        coord_t _EPSILON;
 
         //to calculate the neighbors of the box and avoid the p^2 comparisons,
         //we use hashing. A box can be put into multiple hash buckets.
@@ -94,14 +94,14 @@ public:
             pID(pid),
             dim(dim_),
             lmins(0), lmaxs(0),
-            maxScalar (std::numeric_limits<scalar_t>::max()),
-            _EPSILON(std::numeric_limits<scalar_t>::epsilon()),
+            maxScalar (std::numeric_limits<coord_t>::max()),
+            _EPSILON(std::numeric_limits<coord_t>::epsilon()),
             minHashIndices(0),
             maxHashIndices(0),
             gridIndices(0), neighbors()
         {
-            lmins = new scalar_t [dim];
-            lmaxs = new scalar_t [dim];
+            lmins = new coord_t [dim];
+            lmaxs = new coord_t [dim];
 
             minHashIndices = new part_t [dim];
             maxHashIndices = new part_t [dim];
@@ -114,18 +114,18 @@ public:
         /*! \brief  Constructor
          * deep copy of the maximum and minimum boundaries.
          */
-        coordinateModelPartBox(part_t pid, int dim_, scalar_t *lmi, scalar_t *lma):
+        coordinateModelPartBox(part_t pid, int dim_, coord_t *lmi, coord_t *lma):
             pID(pid),
             dim(dim_),
             lmins(0), lmaxs(0),
-            maxScalar (std::numeric_limits<scalar_t>::max()),
-            _EPSILON(std::numeric_limits<scalar_t>::epsilon()),
+            maxScalar (std::numeric_limits<coord_t>::max()),
+            _EPSILON(std::numeric_limits<coord_t>::epsilon()),
             minHashIndices(0),
             maxHashIndices(0),
             gridIndices(0), neighbors()
         {
-            lmins = new scalar_t [dim];
-            lmaxs = new scalar_t [dim];
+            lmins = new coord_t [dim];
+            lmaxs = new coord_t [dim];
             minHashIndices = new part_t [dim];
             maxHashIndices = new part_t [dim];
             gridIndices = new std::vector <part_t> ();
@@ -139,24 +139,24 @@ public:
         /*! \brief  Copy Constructor
          * deep copy of the maximum and minimum boundaries.
          */
-        coordinateModelPartBox(const coordinateModelPartBox <scalar_t, part_t> &other):
+        coordinateModelPartBox(const coordinateModelPartBox <coord_t, part_t> &other):
             pID(other.getpId()),
             dim(other.getDim()),
             lmins(0), lmaxs(0),
-            maxScalar (std::numeric_limits<scalar_t>::max()),
-            _EPSILON(std::numeric_limits<scalar_t>::epsilon()),
+            maxScalar (std::numeric_limits<coord_t>::max()),
+            _EPSILON(std::numeric_limits<coord_t>::epsilon()),
             minHashIndices(0),
             maxHashIndices(0),
             gridIndices(0), neighbors()
         {
 
-            lmins = new scalar_t [dim];
-            lmaxs = new scalar_t [dim];
+            lmins = new coord_t [dim];
+            lmaxs = new coord_t [dim];
             minHashIndices = new part_t [dim];
             maxHashIndices = new part_t [dim];
             gridIndices = new std::vector <part_t> ();
-            scalar_t *othermins = other.getlmins();
-            scalar_t *othermaxs = other.getlmaxs();
+            coord_t *othermins = other.getlmins();
+            coord_t *othermaxs = other.getlmaxs();
             for (int i = 0; i < dim; ++i){
                 lmins[i] = othermins[i];
                 lmaxs[i] = othermaxs[i];
@@ -191,17 +191,17 @@ public:
         }
         /*! \brief  function to get minimum values along all dimensions
          */
-        scalar_t * getlmins()const{
+        coord_t * getlmins()const{
             return this->lmins;
         }
         /*! \brief  function to get maximum values along all dimensions
          */
-        scalar_t * getlmaxs()const{
+        coord_t * getlmaxs()const{
             return this->lmaxs;
         }
         /*! \brief  compute the centroid of the box 
          */
-        void computeCentroid(scalar_t *centroid)const {
+        void computeCentroid(coord_t *centroid)const {
             for (int i = 0; i < this->dim; i++)
                 centroid[i] = 0.5 * (this->lmaxs[i] + this->lmins[i]);
         }
@@ -221,7 +221,7 @@ public:
 
         /*! \brief function to test whether a point is in the box
          */
-        bool pointInBox(int pointdim, scalar_t *point) const {
+        bool pointInBox(int pointdim, coord_t *point) const {
           if (pointdim != this->dim) 
             throw std::logic_error("dim of point must match dim of box");
           for (int i = 0; i < pointdim; i++) {
@@ -233,7 +233,7 @@ public:
 
         /*! \brief function to test whether this box overlaps a given box
          */
-        bool boxesOverlap(int cdim, scalar_t *lower, scalar_t *upper) const {
+        bool boxesOverlap(int cdim, coord_t *lower, coord_t *upper) const {
           if (cdim != this->dim) 
             throw std::logic_error("dim of given box must match dim of box");
 
@@ -256,11 +256,11 @@ public:
         /*! \brief  function to check if two boxes are neighbors.
          */
         bool isNeighborWith(
-            const coordinateModelPartBox <scalar_t, part_t> &other) const{
+            const coordinateModelPartBox <coord_t, part_t> &other) const{
 
 
-            scalar_t *omins = other.getlmins();
-            scalar_t *omaxs = other.getlmaxs();
+            coord_t *omins = other.getlmins();
+            coord_t *omaxs = other.getlmaxs();
 
             int equality = 0;
             for (int i = 0; i < dim; ++i){
@@ -307,12 +307,12 @@ public:
         /*! \brief  function to obtain the min and max hash values along all dimensions.
          */
         void setMinMaxHashIndices (
-                scalar_t *minMaxBoundaries,
-                scalar_t *sliceSizes,
+                coord_t *minMaxBoundaries,
+                coord_t *sliceSizes,
                 part_t numSlicePerDim
                 ){
             for (int j = 0; j < dim; ++j){
-                scalar_t distance = (lmins[j] - minMaxBoundaries[j]);
+                coord_t distance = (lmins[j] - minMaxBoundaries[j]);
                 part_t minInd = 0;
                 if (distance > _EPSILON && sliceSizes[j] > _EPSILON){
                     minInd = static_cast<part_t>(floor((lmins[j] - minMaxBoundaries[j])/ sliceSizes[j]));
@@ -379,7 +379,7 @@ public:
 
         /*! \brief  function to update the boundary of the box.
         */
-        void updateMinMax (scalar_t newBoundary, int isMax, int dimInd){
+        void updateMinMax (coord_t newBoundary, int isMax, int dimInd){
             if (isMax){
                 lmaxs[dimInd] = newBoundary;
             }
@@ -392,8 +392,8 @@ public:
         */
         void writeGnuPlot(std::ofstream &file,std::ofstream &mm){
             int numCorners = (int(1)<<dim);
-            scalar_t *corner1 = new scalar_t [dim];
-            scalar_t *corner2 = new scalar_t [dim];
+            coord_t *corner1 = new coord_t [dim];
+            coord_t *corner2 = new coord_t [dim];
 
             for (int i = 0; i < dim; ++i){
                 /*
@@ -471,17 +471,17 @@ public:
                     std::string arrowline = "set arrow from ";
                     for (int i = 0; i < dim - 1; ++i){
                         arrowline += 
-                             Teuchos::toString<scalar_t>(corner1[i]) + ",";
+                             Teuchos::toString<coord_t>(corner1[i]) + ",";
                     }
                     arrowline += 
-                         Teuchos::toString<scalar_t>(corner1[dim -1]) + " to ";
+                         Teuchos::toString<coord_t>(corner1[dim -1]) + " to ";
 
                     for (int i = 0; i < dim - 1; ++i){
                         arrowline += 
-                             Teuchos::toString<scalar_t>(corner2[i]) + ",";
+                             Teuchos::toString<coord_t>(corner2[i]) + ",";
                     }
                     arrowline += 
-                         Teuchos::toString<scalar_t>(corner2[dim -1]) + 
+                         Teuchos::toString<coord_t>(corner2[dim -1]) + 
                                                      " nohead\n";
 
                     file << arrowline;
@@ -498,18 +498,18 @@ public:
 /*! \brief GridHash Class,
  * Hashing Class for part boxes
  */
-template <typename scalar_t, typename part_t>
+template <typename coord_t, typename part_t>
 class GridHash{
 private:
 
-    const RCP < std::vector <Zoltan2::coordinateModelPartBox <scalar_t, part_t> > > pBoxes;
+    const RCP < std::vector <Zoltan2::coordinateModelPartBox <coord_t, part_t> > > pBoxes;
 
     //minimum of the maximum box boundaries
-    scalar_t *minMaxBoundaries;
+    coord_t *minMaxBoundaries;
     //maximum of the minimum box boundaries
-    scalar_t *maxMinBoundaries;
+    coord_t *maxMinBoundaries;
     //the size of each slice along dimensions
-    scalar_t *sliceSizes;
+    coord_t *sliceSizes;
     part_t nTasks;
     int dim;
     //the number of slices per dimension
@@ -526,7 +526,7 @@ public:
     /*! \brief GridHash Class,
      * Constructor
      */
-    GridHash(const RCP < std::vector <Zoltan2::coordinateModelPartBox <scalar_t, part_t> > > &pBoxes_,
+    GridHash(const RCP < std::vector <Zoltan2::coordinateModelPartBox <coord_t, part_t> > > &pBoxes_,
             part_t ntasks_, int dim_):
         pBoxes(pBoxes_),
         minMaxBoundaries(0),
@@ -539,9 +539,9 @@ public:
         comXAdj(), comAdj()
     {
 
-        minMaxBoundaries = new scalar_t[dim];
-        maxMinBoundaries = new scalar_t[dim];
-        sliceSizes = new scalar_t[dim];
+        minMaxBoundaries = new coord_t[dim];
+        maxMinBoundaries = new coord_t[dim];
+        sliceSizes = new coord_t[dim];
         //calculate the number of slices in each dimension.
         numSlicePerDim /= 2;
         if (numSlicePerDim == 0) numSlicePerDim = 1;
@@ -681,8 +681,8 @@ public:
      * calculates the minimum of maximum box boundaries, and maxium of minimum box boundaries.
      */
     void getMinMaxBoundaries(){
-        scalar_t *mins = (*pBoxes)[0].getlmins();
-        scalar_t *maxs = (*pBoxes)[0].getlmaxs();
+        coord_t *mins = (*pBoxes)[0].getlmins();
+        coord_t *maxs = (*pBoxes)[0].getlmaxs();
 
         for (int j = 0; j < dim; ++j){
             minMaxBoundaries[j] = maxs[j];
@@ -719,28 +719,28 @@ public:
     }
 };
 /*
-template <typename scalar_t,typename part_t>
+template <typename coord_t,typename part_t>
 class coordinatePartBox{
 public:
         part_t pID;
         int dim;
         int numCorners;
-        scalar_t **corners;
-        scalar_t *lmins, *gmins;
-        scalar_t *lmaxs, *gmaxs;
-        scalar_t maxScalar;
+        coord_t **corners;
+        coord_t *lmins, *gmins;
+        coord_t *lmaxs, *gmaxs;
+        coord_t maxScalar;
         std::vector <part_t> hash_indices;
-        coordinatePartBox(part_t pid, int dim_, scalar_t *lMins, scalar_t *gMins,
-                                    scalar_t *lMaxs, scalar_t *gMaxs):
+        coordinatePartBox(part_t pid, int dim_, coord_t *lMins, coord_t *gMins,
+                                    coord_t *lMaxs, coord_t *gMaxs):
             pID(pid),
             dim(dim_),
             numCorners(int(pow(2, dim_))),
             corners(0),
             lmins(lMins), gmins(gMins), lmaxs(lMaxs), gmaxs(gMaxs),
-            maxScalar (std::numeric_limits<scalar_t>::max()){
-            this->corners = new scalar_t *[dim];
+            maxScalar (std::numeric_limits<coord_t>::max()){
+            this->corners = new coord_t *[dim];
             for (int i = 0; i < dim; ++i){
-                this->corners[i] = new scalar_t[this->numCorners];
+                this->corners[i] = new coord_t[this->numCorners];
                 lmins[i] = this->maxScalar;
                 lmaxs[i] = -this->maxScalar;
             }
@@ -768,7 +768,7 @@ private:
 
     typedef typename Adapter::lno_t lno_t;
     typedef typename Adapter::gno_t gno_t;
-    typedef typename Adapter::scalar_t scalar_t;
+    typedef typename Adapter::coord_t coord_t;
 
     const Environment *env;
     const Teuchos::Comm<int> *comm;
@@ -803,10 +803,10 @@ public:
 
 
         size_t allocSize = numParts * coordDim;
-        scalar_t *lmins = new scalar_t [allocSize];
-        scalar_t *gmins = new scalar_t [allocSize];
-        scalar_t *lmaxs = new scalar_t [allocSize];
-        scalar_t *gmaxs = new scalar_t [allocSize];
+        coord_t *lmins = new coord_t [allocSize];
+        coord_t *gmins = new coord_t [allocSize];
+        coord_t *lmaxs = new coord_t [allocSize];
+        coord_t *gmaxs = new coord_t [allocSize];
 
         for(part_t i = 0; i < numParts; ++i){
             coordinatePartBox tmp(
@@ -820,7 +820,7 @@ public:
             cpb.push_back(tmp);
         }
 
-        typedef StridedData<lno_t, scalar_t> input_t;
+        typedef StridedData<lno_t, coord_t> input_t;
         Teuchos::ArrayView<const gno_t> gnos;
         Teuchos::ArrayView<input_t>     xyz;
         Teuchos::ArrayView<input_t>     wgts;
@@ -829,13 +829,13 @@ public:
         //local and global num coordinates.
         lno_t numLocalCoords = coords->getLocalNumCoordinates();
 
-        scalar_t **pqJagged_coordinates = new scalar_t *[coordDim];
+        coord_t **pqJagged_coordinates = new coord_t *[coordDim];
 
         for (int dim=0; dim < coordDim; dim++){
-            Teuchos::ArrayRCP<const scalar_t> ar;
+            Teuchos::ArrayRCP<const coord_t> ar;
             xyz[dim].getInputArray(ar);
             //pqJagged coordinate values assignment
-            pqJagged_coordinates[dim] =  (scalar_t *)ar.getRawPtr();
+            pqJagged_coordinates[dim] =  (coord_t *)ar.getRawPtr();
         }
 
         part_t *sol_part = soln->getPartList();
@@ -866,9 +866,9 @@ public:
                 );
 
         //calculate the corners of the dataset.
-        scalar_t *allMins = new scalar_t [coordDim];
-        scalar_t *allMaxs = new scalar_t [coordDim];
-        part_t *hash_scales= new scalar_t [coordDim];
+        coord_t *allMins = new coord_t [coordDim];
+        coord_t *allMaxs = new coord_t [coordDim];
+        part_t *hash_scales= new coord_t [coordDim];
 
         for (int j = 0; j < coordDim; ++j){
             allMins[j] = cpb[0].gmins[j];
@@ -878,15 +878,15 @@ public:
 
         for (part_t i = 1; i < numParts; ++i){
             for (int j = 0; j < coordDim; ++j){
-                scalar_t minC = cpb[i].gmins[i];
-                scalar_t maxC = cpb[i].gmaxs[i];
+                coord_t minC = cpb[i].gmins[i];
+                coord_t maxC = cpb[i].gmaxs[i];
                 if (minC < allMins[j]) allMins[j] = minC;
                 if (maxC > allMaxs[j]) allMaxs[j] = maxC;
             }
         }
 
         //get size of each hash for each dimension
-        scalar_t *hash_slices_size = new scalar_t [coordDim];
+        coord_t *hash_slices_size = new coord_t [coordDim];
         for (int j = 0; j < coordDim; ++j){
             hash_slices_size[j] = (allMaxs[j] - allMins[j]) / pSingleDim;
 
@@ -908,8 +908,8 @@ public:
 
             for (int j = 0; j < coordDim; ++j){
 
-                scalar_t minC = cpb[i].gmins[i];
-                scalar_t maxC = cpb[i].gmaxs[i];
+                coord_t minC = cpb[i].gmins[i];
+                coord_t maxC = cpb[i].gmaxs[i];
                 part_t minHashIndex = part_t ((minC - allMins[j]) / hash_slices_size[j]);
                 part_t maxHashIndex  = part_t ((maxC - allMins[j]) / hash_slices_size[j]);
 

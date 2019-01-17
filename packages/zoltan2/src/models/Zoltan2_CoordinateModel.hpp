@@ -51,6 +51,7 @@
 #ifndef _ZOLTAN2_COORDINATEMODEL_HPP_
 #define _ZOLTAN2_COORDINATEMODEL_HPP_
 
+#include <Zoltan2_InputTraits.hpp>
 #include <Zoltan2_Model.hpp>
 #include <Zoltan2_MeshAdapter.hpp>
 #include <Zoltan2_MatrixAdapter.hpp>
