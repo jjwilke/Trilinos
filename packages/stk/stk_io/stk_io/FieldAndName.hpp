@@ -116,7 +116,6 @@ public:
 private:
     std::vector<std::string> m_partNames;
     std::string  m_dbName;
-    DataLocation m_location;
 };
 
 }//namespace io
