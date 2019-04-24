@@ -22,6 +22,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      LIBRT
      Cuda_Lambda
      Cuda_Relocatable_Device_Code
+     Cuda_RDC
      Cuda_UVM
      Cuda_LDG_Intrinsic
      HPX_ASYNC_DISPATCH
@@ -60,7 +61,12 @@ foreach(opt ${KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST})
       ENDIF()
     ELSE()
       SET(KOKKOS_INTERNAL_ENABLE_${OPT}_DEFAULT ${Kokkos_ENABLE_${opt}})
+      SET(KOKKOS_ENABLE_${OPT} ${Kokkos_ENABLE_${opt}})
     ENDIF()
+  ELSEIF(DEFINED KOKKOS_ENABLE_${OPT})
+    #if we are here, the lower case version is not defined 
+    #define it to avoid breaking anything later on
+    SET(Kokkos_ENABLE_${opt} ${KOKKOS_ENABLE_${OPT}})
   ENDIF()
 endforeach()
 
@@ -308,6 +314,9 @@ set(KOKKOS_ENABLE_DEPRECATED_CODE ${KOKKOS_INTERNAL_ENABLE_DEPRECATED_CODE_DEFAU
 set_kokkos_default_default(EXPLICIT_INSTANTIATION OFF)
 set(KOKKOS_ENABLE_EXPLICIT_INSTANTIATION ${KOKKOS_INTERNAL_ENABLE_EXPLICIT_INSTANTIATION_DEFAULT} CACHE BOOL "Enable explicit template instantiation.")
 
+set_kokkos_default_default(ETI OFF)
+set(KOKKOS_ENABLE_ETI ${KOKKOS_INTERNAL_ENABLE_EXPLICIT_INSTANTIATION_DEFAULT} CACHE BOOL "Enable explicit template instantiation.")
+
 #-------------------------------------------------------------------------------
 #------------------------------- KOKKOS_USE_TPLS -------------------------------
 #-------------------------------------------------------------------------------
@@ -370,6 +379,11 @@ set(KOKKOS_ENABLE_CUDA_UVM ${KOKKOS_INTERNAL_ENABLE_CUDA_UVM_DEFAULT} CACHE BOOL
 set(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE ${KOKKOS_INTERNAL_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE_DEFAULT} CACHE BOOL "Enable relocatable device code for CUDA. (cuda option)")
 set(KOKKOS_ENABLE_CUDA_LAMBDA ${KOKKOS_INTERNAL_ENABLE_CUDA_LAMBDA_DEFAULT} CACHE BOOL "Enable lambdas for CUDA. (cuda option)")
 
+# Make sure KOKKOS_ARCH is set to something
+IF ("${KOKKOS_ARCH}" STREQUAL "NOT_SET")
+  set(KOKKOS_ARCH "None")
+ENDIF()
+
 
 #-------------------------------------------------------------------------------
 #------------------------------- KOKKOS_HPX_OPTIONS ----------------------------
@@ -382,26 +396,6 @@ set_kokkos_default_default(HPX_ASYNC_DISPATCH OFF)
 # Set actual options
 set(KOKKOS_ENABLE_HPX_ASYNC_DISPATCH ${KOKKOS_INTERNAL_ENABLE_HPX_ASYNC_DISPATCH_DEFAULT} CACHE BOOL "Enable HPX async dispatch.")
 
-
-#-------------------------------------------------------------------------------
-#----------------------- HOST ARCH AND LEGACY TRIBITS --------------------------
-#-------------------------------------------------------------------------------
-
-# This defines the previous legacy TriBITS builds. 
-set(KOKKOS_LEGACY_TRIBITS False)
-IF ("${KOKKOS_ARCH}" STREQUAL "NOT_SET")
-  set(KOKKOS_ARCH "None")
-  IF(KOKKOS_HAS_TRILINOS)
-    set(KOKKOS_LEGACY_TRIBITS True)
-  ENDIF()
-ENDIF()
-IF (KOKKOS_HAS_TRILINOS)
-  IF (KOKKOS_LEGACY_TRIBITS)
-    message(STATUS "Using the legacy tribits build because KOKKOS_ARCH not set")
-  ELSE()
-    message(STATUS "NOT using the legacy tribits build because KOKKOS_ARCH *is* set")
-  ENDIF()
-ENDIF()
 
 #-------------------------------------------------------------------------------
 #----------------------- Set CamelCase Options if they are not yet set ---------
