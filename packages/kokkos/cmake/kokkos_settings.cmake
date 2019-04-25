@@ -171,6 +171,7 @@ SET(KOKKOS_CXX_STANDARD "" CACHE STRING "The C++ standard for Kokkos to use: c++
 SET(KOKKOS_CXX_FEATURES "" CACHE STRING "The list of C++ features for Kokkos to enable")
 SET(CXX_STANDARD_TEST)
 
+
 IF (KOKKOS_CXX_STANDARD AND CMAKE_CXX_STANDARD)
   #make sure these are consistent
   IF (${KOKKOS_CXX_STANDARD} STREQUAL "c++11")
@@ -220,7 +221,6 @@ IF (CMAKE_CXX_STANDARD)
     SET(KOKKOS_CXX_STANDARD "c++17")
   ENDIF()
 ENDIF()
-
 
 if (CMAKE_CXX_STANDARD)
   if (CMAKE_CXX_STANDARD STREQUAL "98")

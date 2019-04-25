@@ -509,7 +509,7 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX1Y), 1)
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CXX14")
 endif
 ifeq ($(KOKKOS_INTERNAL_ENABLE_CXX17), 1)
-ifneq ($(KOKKOS_STANDALONE_CMAKE), yes) #for CMake, use target_compile_features
+ifneq ($(KOKKOS_STANDALONE_CMAKE), yes)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_CXX17_FLAG)
 endif
   tmp := $(call kokkos_append_header,"\#define KOKKOS_ENABLE_CXX17")
